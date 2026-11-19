@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="tl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>The Curse In Spaceship Down to Earth — Star Wars Scroll</title>
+<style>
+  :root {
+    --sw-yellow: #ffe81f;
+    --sw-cyan: #4deeea;
+    --bg-space: #02030a;
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: radial-gradient(circle at 50% 40%, #090d24 0%, #03040c 60%, var(--bg-space) 100%);
+    font-family: "Segoe UI", "Arial Black", Impact, sans-serif;
+    color: var(--sw-yellow);
+    user-select: none;
+  }
+
+  /* Hyperspeed & Starfield Canvas */
+  #spaceCanvas {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    display: block;
+  }
+
+  /* Flying Emojis + Emoji Fireworks Layer */
+  #emojiLayer {
+    position: fixed;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .flying-emoji {
+    position: absolute;
+    font-size: clamp(1.6rem, 3.4vw, 3.2rem);
+    will-change: transform, opacity;
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.45));
+  }
+
+  .emoji-spark {
+    position: fixed;
+    font-size: clamp(1.1rem, 2.2vw, 2rem);
+    pointer-events: none;
+    z-index: 4;
+    will-change: transform, opacity;
+    filter: drop-shadow(0 0 8px rgba(255, 232, 31, 0.75));
+  }
+
+  /* Phase 1: "There lived a galaxy far, far away..." */
+  #introPhrase {
+    position: fixed;
+    inset: 0;
+    z-index: 6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    color: var(--sw-cyan);
+    font-family: "Courier New", Courier, monospace;
+    font-size: clamp(1.2rem, 3vw, 2.4rem);
+    line-height: 1.5;
+    letter-spacing: 0.06em;
+    text-shadow: 0 0 16px rgba(77, 238, 234, 0.75);
+    opacity: 0;
+    transition: opacity 1.1s ease;
+    pointer-events: none;
+  }
+
+  #introPhrase.visible {
+    opacity: 1;
+  }
+
+  /* Phase 2: Game Title Logo Fly-In & Hyper Drop-Off */
+  #gameLogoWrap {
+    position: fixed;
+    inset: 0;
+    z-index: 7;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 1.5rem;
+    pointer-events: none;
+    opacity: 0;
+    transform: scale(3.4);
+    transition: transform 2.6s cubic-bezier(0.14, 0.85, 0.25, 1), opacity 1.1s ease;
+  }
+
+  #gameLogoWrap.show {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  #gameLogoWrap.hyper-dropoff {
+    opacity: 0;
+    transform: scale(0.03) translateZ(-900px);
+    filter: blur(8px);
+    transition: transform 1.25s cubic-bezier(0.7, 0, 0.95, 0.4), opacity 1.1s ease, filter 1.2s ease;
+  }
+
+  .sw-logo-title {
+    font-size: clamp(2.1rem, 6.2vw, 5.2rem);
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    line-height: 1.08;
+    color: transparent;
+    -webkit-text-stroke: 2.5px var(--sw-yellow);
+    text-shadow:
+      0 0 22px rgba(255, 232, 31, 0.7),
+      0 0 55px rgba(255, 180, 0, 0.35);
+    max-width: 1100px;
+  }
+
+  .sw-logo-sub {
+    margin-top: 0.85rem;
+    font-size: clamp(0.95rem, 2.2vw, 1.65rem);
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: var(--sw-yellow);
+    opacity: 0.92;
+  }
+
+  /* Phase 3: Large Diagonal & Perspective Star Wars Crawl */
+  #crawlViewport {
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    perspective: 720px;
+    perspective-origin: 50% 24%;
+    overflow: hidden;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.9s ease;
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.65) 10%,
+      rgba(0, 0, 0, 1) 24%,
+      rgba(0, 0, 0, 1) 100%
+    );
+    mask-image: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0) 0%,
+      rgba(0, 0, 0, 0.65) 10%,
+      rgba(0, 0, 0, 1) 24%,
+      rgba(0, 0, 0, 1) 100%
+    );
+  }
+
+  #crawlViewport.active {
+    opacity: 1;
+  }
+
+  #crawlPlane {
+    position: absolute;
+    left: 50%;
+    top: 86%;
+    width: min(1160px, 94vw);
+    transform-origin: 50% 85%;
+    transform: translate3d(-50%, 0, 140px) rotateX(34deg) rotateZ(-4deg);
+    text-align: justify;
+    text-align-last: center;
+    font-size: clamp(1.9rem, 4.1vw, 3.5rem);
+    line-height: 1.54;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: var(--sw-yellow);
+    text-shadow:
+      0 0 18px rgba(255, 232, 31, 0.45),
+      0 4px 16px rgba(0, 0, 0, 0.95);
+    will-change: transform;
+  }
+
+  #crawlPlane .episode-tag {
+    text-align: center;
+    font-size: clamp(1.4rem, 2.5vw, 2.1rem);
+    letter-spacing: 0.22em;
+    color: var(--sw-cyan);
+    margin-bottom: 0.65rem;
+    text-transform: uppercase;
+  }
+
+  #crawlPlane .crawl-title {
+    text-align: center;
+    font-size: clamp(2.5rem, 5.2vw, 4.4rem);
+    letter-spacing: 0.12em;
+    margin-bottom: 2.3rem;
+    text-transform: uppercase;
+  }
+
+  #crawlPlane p {
+    margin-bottom: 2.1rem;
+  }
+
+  /* Top Control HUD */
+  #hudControls {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 20;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .hud-btn {
+    background: rgba(10, 14, 34, 0.85);
+    color: var(--sw-yellow);
+    border: 1.5px solid rgba(255, 232, 31, 0.7);
+    padding: 8px 13px;
+    border-radius: 6px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: transform 0.15s ease, background 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .hud-btn:hover {
+    background: rgba(255, 232, 31, 0.18);
+    box-shadow: 0 0 14px rgba(255, 232, 31, 0.45);
+    transform: translateY(-1px);
+  }
+
+  .hud-btn.active {
+    background: var(--sw-yellow);
+    color: #050712;
+  }
+
+  #statusBanner {
+    position: fixed;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 20;
+    background: rgba(5, 8, 22, 0.82);
+    border: 1px solid rgba(77, 238, 234, 0.45);
+    color: var(--sw-cyan);
+    font-family: "Courier New", Courier, monospace;
+    font-size: 0.8rem;
+    padding: 6px 14px;
+    border-radius: 999px;
+    letter-spacing: 0.04em;
+    pointer-events: none;
+    white-space: nowrap;
+  }
+
+  /* Start Overlay to unlock Audio & Speech Synthesis smoothly */
+  #startGate {
+    position: fixed;
+    inset: 0;
+    z-index: 30;
+    background: radial-gradient(circle at center, rgba(14, 20, 48, 0.95) 0%, rgba(2, 3, 10, 0.99) 100%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+  }
+
+  #startGate.hidden {
+    display: none;
+  }
+
+  #startGate h1 {
+    font-size: clamp(1.8rem, 4.5vw, 3.6rem);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 0.8rem;
+    text-shadow: 0 0 24px rgba(255, 232, 31, 0.65);
+  }
+
+  #startGate p {
+    max-width: 660px;
+    color: #d9e8ff;
+    font-size: 1rem;
+    line-height: 1.6;
+    margin-bottom: 1.8rem;
+  }
+
+  #launchBtn {
+    background: linear-gradient(135deg, #ffe81f, #ffae00);
+    color: #060814;
+    border: none;
+    padding: 15px 34px;
+    font-size: 1.1rem;
+    font-weight: 900;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: 0 0 28px rgba(255, 232, 31, 0.75);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  #launchBtn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 0 42px rgba(255, 232, 31, 1);
+  }
+</style>
+</head>
+<body>
+
+  <!-- Star Wars Theme MP3 Audio (Direct MP3 URL + Local MP3 Backup + Synth Fallback) -->
+  <audio id="bgMusic" loop preload="auto" crossorigin="anonymous">
+    <source src="https://www.televisiontunes.com/uploads/audio/Star%20Wars.mp3" type="audio/mpeg" />
+    <source src="starwars-theme.mp3" type="audio/mpeg" />
+  </audio>
+
+  <canvas id="spaceCanvas"></canvas>
+  <div id="emojiLayer"></div>
+
+  <div id="introPhrase">There lived a galaxy far, far away...</div>
+
+  <div id="gameLogoWrap">
+    <div class="sw-logo-title">The Curse In Spaceship Down to Earth</div>
+    <div class="sw-logo-sub">3D UI Edition • Lodi • Werpanot • Wizard Zombalungot</div>
+  </div>
+
+  <div id="crawlViewport">
+    <div id="crawlPlane">
+      <div class="episode-tag">Galactic Chronicle • Part 2</div>
+      <div class="crawl-title">The Curse In Spaceship Down to Earth</div>
+      <div id="crawlStoryBody"></div>
+    </div>
+  </div>
+
+  <div id="hudControls">
+    <button class="hud-btn active" id="toggleMusicBtn" type="button">🎵 MP3 Music: ON</button>
+    <button class="hud-btn active" id="toggleSfxBtn" type="button">🎆 Emoji SFX: ON</button>
+    <button class="hud-btn active" id="toggleVoiceBtn" type="button">🗣️ AI Voice: ON</button>
+    <button class="hud-btn" id="replayBtn" type="button">🔄 Replay</button>
+  </div>
+
+  <div id="statusBanner">Ready • Star Wars MP3 + Hyperspeed + Emoji Fireworks + Diagonal Scroll</div>
+
+  <div id="startGate">
+    <h1>The Curse In Spaceship Down to Earth</h1>
+    <p>
+      Star Wars animation theme with Star Wars MP3 music from the start, hyperspeed stars, game title hyper drop-off, flying emojis popping into fireworks displays with sound effects, large diagonal perspective scroll, and AI voice narration.
+    </p>
+    <button id="launchBtn" type="button">🚀 Launch Hyperspeed Scroll</button>
+  </div>
+
+<script>
+(() => {
+  // =========================================================================
+  // FULL STORY CONTENT FROM "Curse In Spaceship Down to earth Part 2.docx"
+  // =========================================================================
+  const STORY_TITLE = "The Curse In Spaceship Down to Earth";
+
+  const STORY_PARAGRAPHS = [
+    "Ang title ng game ay The Curse In Spaceship Down to earth ang twist ng game natin ay parang Mario ganun. Baliw wag na mario gawin nalang nating UI itong game na ito 3d ganun ang hirap ng 2d game sobrang lawak ng kwento e… para maganda ang yung plot at twist.",
+    "Characters: Lodi the Dog Savior - Protagonist or main character, Antagonist is astronaut the traitor of serum and eaten by Werpanot, Werpanot is the villain character who is called that time a zombie monster piranha humanoid in short Shokoy, Wizard Zombalungot - the mentor or the sage.",
+    "Noong unang panahon wala pang spaceship dito sa planeta natin. Nagkataon lang may isang astronaut na tawagin natin sya sa pangalan na Petmalu ang pumunta sa moon pero ang hindi alam ng aso pangalan ay sina Lodi at nadiskubre na meron palang alien na tinatawag katulad ng myth na tinatawag natin na piranha humanoid ganun. Kasi yung astronaut bale ang ginawa nya hinintay pa nya yung piranha humanoid na ito maging monster so ang ginawa ng astronaut dito sa moon na-inject nya yung serum ng kakaibang periodic element ng tao like yung piranha human na ito dati oo good piranha human yan naging zombie apocalypse piranha human na ito kasi kasalanan ni astronaut ito kung hindi sana sya gumawa ng kalokohan at hindi nya nainject yun hindi sya magiging zombie piranha human na ganyan malala ngayon naging totoong zombie monster na sya ngayon.",
+    "At ano ginawa ng astronaut nung Nakita nyang naging zombie monster piranha human yan ang gagawin nito ay kakainin sya ng buhay. Tapos dito na nagsisimula ang panibagong kwento ng buhay ng isang zombie monster piranha humanoid ipangalan nalang natin sya sa pangalang Werpa a.k.a Werpanot. After matapos kainin at simot ang astronaut syempre busog na busog ito at habang kumakain sya ng maraming kalaban lalo sya lumalakas at nagiging immortal.",
+    "Nang makarating ang ito sa planet earth syempre malakas muna sina Werpa parang katulad sya ng klase ng shokoy ngayon ang gagawin nitong shokoy na ito after nyang isimot sina astronaut syempre yummy ang Werpa ngayon ang gagawin nalang nya ay tatalon sya ng malaking bagsak hanggang sa yung mga tao sa siyudad pati narin sa village, at gobyerno ang magiging resulta may warning na sumalakay dito at itong halimaw na ito sya ay sina Werpanot. Kasi nga pinagcombine sya ng shokoy kasi piranha at tama diba nagmutate kaya sya tinatawag na Werpanot ganun.",
+    "Ngayon ang mangyayari nalang dito ay syempre sisigaw ang mga taumbayan at sasabihin na saklolo may halimaw po dito. Na-detect po naman na sinisira niya po ang aming mga tirahan at kumakain narin sina Werpanot ng mga inosenteng tao. At nung nalaman nito ng asong sina Lodi. Bigla syang kinabahan kasi alam nyang bigla syang na-traydor ng kanyang astronaut na kaibigan na sina Petmalu na astronaut sya yung naging best friend nina Lodi the dog nun after all those years passed. Nalaman nya lang ni Lodi yung ganun na aalis sina Petmalu nun ng walang paalam since 20 years na nakalipas bago si Petmalu namatay. At yun pala nabalita narin sa kasalukuyang panahon sa news dun sa moon na forecast nito ng mga investigators ang tanong sino ang salarin sa moon bakit maraming dugo doon. Yun ang kailangan nilang hanapin. At yung sina Lodi the dog naman nagtataka ano kayang kailangan nyang gawin para malutas ang problema na ito.",
+    "Pero nung sumalakay na sina Werpanot sa gera dito sa mundong ibabaw syempre winasak nya lahat at kumain ng marami kasi the more na maliit pa sya nun the more na lalaki sya ng lalaki kaya ngayon parang akala mo immortal. Lalo na’t dumating narin yung mga missiles, fire arms, navy, tanks at airforces pero tabla parin kayna Werpanot. Ang gagawin nina Lodi syempre sobrang lungkot kasi dati yung populasyon ng mga tao at mga tahanan nun dapat maretrieve ito ng 100% o maibalik ang mga nawawalang tao, hayop man dito sa mundo. Kasi kapag inubos nina Shokoy ito too late sya na titira dito sa earth at isa pa sasakupin pa nya yung bagong planet katulad ng 8 planets ng solar system.",
+    "At ang pinakamas mahirap din sa lahat kagaya nga ng sinabi ko ang pinaka mahirap na kalaban na kayang kainin ng isang nilalang na shokoy syempre sina Werpanot zombie na nga diba. Ngayon ang mangyayari magiging immortal kaagad sya parang sina ben 10 heatblast na yung kanyang dating nun kasi nga kapag nagliliyab na ang buong katawan nya sa apoy mas mahihirapan sina Lodi the dog matalo sya ng ganun kadali. Kaya ang gagawin nina Lodi the dog iisipin nya ano kaya ang kailangan kong gawin kasi nalaman ko yung kaaway ko pala sina Petmalu kong astronaut nung nasa moon pa sya. At nakita ko pa yung ginawa nyang kalokohan kung hindi nya sana na-inject yung serum edi hindi sya nagmutate as shokoy sa totoong myth na ito. At ang tanong saan kaya mahahanap nina Lodi the dog ang antidote o bakuna para yung pagiging immortal nina Werpanot ay mabawasan ng mabawasan lalo diba.",
+    "Bale ang gagawin nina Lodi the dog ay gagawa sya ng paraan sa pamamagitan lamang ng magic spells na babasahin nya ngayon ang gagawin nya para lumabas ang wizard sa kabilang buhay. Kasi syempre diba ang Wizard na immortal talaga hindi namamatay yun kasi nasa kabilang buhay nga siya tama ako diba. Ngayon ang hirap lang gawin ng Lodi the dog kailangan nya mahanap ang pangalan ng mismong tao na nabasa nya dito sa wizard book. Kasi kung nabasa nya yung password na ito syempre parang Genie lang yan. Kapag ang kaluluwa ng patay ay tinawag malamang magpapakita dito sa lupa diba. At kapag tinawag o binasa ni Lodi the dog ang pangalan kung sino ang author nitong wizard book na ito. Ay nangangahulugang mag-aappear ito sa totoong buhay. At ayun sinabi nya yung pangalan sa libro ng wizard book na sina Zombalungot. Kasi para sakin ang Zombalungot nayan ito ang immortal wizard na matagal nabuhay ng mahabang taon kaysa wala pang nabubuhay noong mga panahon na iyon. Bale sina Zombalungot in short kaya nyang mabuhay ng 1,000 years old basta nakasanayan nyang basahin ang magic spells na Necromancer kasi habang may pinapatay sya ng paulit ulit na kalaban nya nagiging matibay parin ito. Kasi ang kaluluwa ng isang patay magreresurrect ito ng ilang beses hanggang ang kalaban ay mapagod. Kasi the more na lumalakas ang kalaban sa kabila. The more na manghihina at matatalo sila ng mas mabilis. Kaya matic kapag sinunod nito ng payo ng isang Lodi the dog makakaasa sya mapupuksa nya ang kalaban.",
+    "Almost 50 years na ang nakakalipas tignan mo naman sobrang linis maraming mga anak, asawa, pamilya, o singles man ang mga namatay dito sa Earth. Take note wala pa kasing nahanap na lunas, antidote o bakuna panglaban kayna Werpanot. Ang ginawa naman nina Lodi the dog is nung nag-appeared na yung ermitanyo na sina Wizard Zombalungot binilinan sya na oy ikaw aso ka ano pangalan mo tapos sabi naman nina dog ako sina Lodi tapos may nangyayari nang mali sa aming bayan marami ng tao ang nagbuwis ng buhay at maraming mga tahanan, city at mga arm forces nawala sa amin. Kailangan namin ng tulong mo po. At pinagsabihan siya ni Wizard Zombalungot na kung ito ang nais mo pagbibigyan kita meron akong ipapayo para puksain sina shokoy at ano pangalan nitong shokoy na ito. Sabi ni Lodi the dog sya po sina Werpanot ang pinakamabagsik na nilalang sa mythology. Kasi nasabi ko sa kasalukuyang kwento ng nasabi ko dati sa alamat ng wizard book mo nun. Kapag pinatagal pa ito ng 80 years ang pagsakop saming mga tao then yung mga hayop naman ang itatarget ng Werpanot na shokoy na ito para maging mga animal shokoy narin. Kasi diba ang zombie na shokoy kapag napasa pasa yan nagmumutate kaagad ito ng mabilis.",
+    "Ngayon ang plano ko po ano po yung antidote ko dyan Wizard Zombalungot. Ang sabi naman nina Wizard Zombalungot bibigay kita ng mga gems at mga pagsubok ok. At kailangan sa mga trainings mo na ito ikaw ang aso diba. So ang mangyayari maraming ibat ibang klaseng gems bibigyan kita ng maraming gems na 10 gems galing lamang sa mas makapangyarihan na period table of elements para ang pagiging immortal ng shokoy at ang pagpaparami ng zombie virus animal shokoys ay mapuksa. So ang gagawin mo lagi is kailangan kainin mo ang mga makapangyarihang gems na magiging good shokoy dog ka vs sa Werpanot shokoy nayun itong mga gems katulad ng 1. plutonium - the doom gem o radioactive gems sa dinamita malakas sumabog ngayon kung walang laban sina werpanot shokoy dun talo na sya kung wala syang ganung element na gems, 2. radon or phantom gem ito ang poisonous gas the more na masagap nya at mahinga ito ng tuluyan lilit sya ng lilit hanggang sa mamatay ang pagiging immortal nito. 3. Polonium o assassin gem parang kapag kinagat mo ang gem na ito yung ipin mo ay poisnous curse as a shokoy dog ka na. Parang kung baga sa teleserye kinagat mo ito mas marami kang ipit na makakain diba makakain mo ang internal organs nito mabilis sya magblebleed. 4. Ang cesium naman o liquid fire gem kagatin mo ito magiging apoy kang shokoy dog at kapag ang kalaban mo ay werpanot apoy shokoy na sya mas tabla kayo.. Pero ang magandang resulta nyan kung 100% ang apoy mo kahit tabla mabilis humina ito ng 0% fatal death. 5. Ununpentium in short the reality shatter gem. Layunin nito na maging rebound ang kalaban mo na kapag sina Werpanot shokoy kasi yung shatter gem isipin nalang natin mabilis ang tira mo at sya mabagal mabilis matalo sina Werpanot shokoy. Kasi the more mabilis tira the more mas malakas ka kaysa sa immortal na werpanot shokoy humina ang skills nito pati narin sa mga animal shokoys. 6. Osmium or crushing gem layunin naman nito igravitate ang maling tira ng werpanot shokoy example titira sya sa kabila wala ang dog shokoy dun ang mangyayari ang kaya lang nya itira ay example makakatira ba ang werpanot shokoy kung nasa land lang kasi hindi makakasurvive ito kung puro dust sya o lupa. Parang sa worm ganun. Kakagatin ni dog shokoy sa baba ang tira para humina at magbleed ang werpanot shokoy. Syempre kapag humina lilit at babalik ito sa dati hindi maging immortal. .7 Francium naman o chain reaction gem example may powers sina werpanot shokoy na water at ikaw fire ka kapag mas malakas ang fire talo sina werpanot bale magdudugo ang mga balat nito mahirap maging immortal na magkaibang elemento. 8. Thorium o sunlight gem alam natin parang fire mamatay sina werpanot shokoy sa sinag ng araw kapag tuyong tuyo ang lalamunan ito hindi sya magkakalat ulit ng virus o manghawa ng ibang animal shokosy at mahirap kumain ng tao kapag lalong tuyo at hindi magbabasa ang lalamunan nito. Yun ang kinakatakot ng werpanot shokoy ang mahirap kumain dahil tuyo lalamunan di basta. Kasi kapag may sunlight gem ang dog shokoy na ito ang mangyayari kakainin nya mas madali ang laman o organs mabilis ito magblebleed. 9.Neptunium naman o Ocean Slayer gem tubig sa tubig kapag tabla ang water ng werpanot shokoy dun sure na patay na kaagad sya ganun. Lastly naman californium o the atomic curse gem. Mas malakas ito sa pagiging immortal ng isang dog shokoy kasi kapag kinain nya ito immortal sya vs immortal talo ang werpanot shokoy sa totoo lang. Kasi ang mangyayari dito sa mga animals na hindi pa navirus ng mga shokoy ay kakagatin ito ng dog shokoy hanggang sa magparami ng lahi hanggang sa like protagonist animal shokoys vs antagonist animal shokoys ang mangyayari dyan. Basta the more na hindi nauubos ang mga virus ng protagonist shokoys may pag-asa pa lumakas example kapag yung protagonist animal shokoys kinagat nya yung na virus na animal shokoys ang mangyayari magiging mutated ito na protagonist animal shokoys hanggang sa matalo ang hari na sina Werpanot shokoys. At kapag ito ang pinayo ng Wizard Zombalungot mababalik nya sa dati ang mga nakain na tao, mga nasirang tirahan at iba pa. Basta mangako lang sina Dog Lodi shokoy na sya ang super hero sa kwento.",
+    "Pagtapos ng 100 na taon wala parin nangyayari 25% ang populasyon ng mga tao nun ano ginawa nung walang matirhan nagtago sila sa tunnel para hindi mabuking at makain ng Werpanot shokoy na ito. Kasi ang goal ni Werpanot shokoy makakain ng tao para lumakas at kapag mas malakas siya kakagat sya ng animals para maging villain na mga shokoys ganun. Pero ang tanong hanggang kelan yung mga tao tatago sa laban. Ang goal lang ng dog ay sa tulong ni wizard Zombalungot magpapaalam na ito kaagad after ng pagsasanay. Then ang main goal lang ng dog na ito kapag kinain nya yung 10 gems magiging malakas sya pero kapag yung mga antagonist shokoys na animals kumain mas talo sya. Kaya dapat wag sya magpahuli kundi matic end of the world. Ang main character lang sa kwento ay sina Dog lang which is sina Lodi na magiging immortal dog shokoy dapat basta ang goal kapag maraming kinain ng gems example ang sinabi ng wizard sa kanya itong amount kailangan mong kainin na gems pero kung nangalahati ka palang dun talo ka kawawa ang mga tao walang magliligtas sa kanila. Kaya sinasabi natin na hanggat nagtatago yung mga tao may pag-asa pa sila mabuhay dito sa mundo. Sa loob ng 100 na taon na blanko na ang mundo walang iba puro mga hayop nalang natitira ang kaya nya nalang gawin ng Werpanot Shokoy ay kumagat at maging virus ang mga animal shokoys kasi dito gagawa yung mga animals shokoy ng isang space ship kasi the more na mas marami silang space ship na gagawin edi syempre isa lang ang magiging resulta nyan magiging malakas sila na army may missiles, baril lahat ng mga ginagawa ng tao noon katulad ng navy, tanks at pati airforce kaya din gawin yun ng mga animal shokoys pero ang masakit dun gaya nga ng sinabi ni Wizard kapag kinain nila ang gems yari ka tapos ka na sa eksena ng dog shokoy na hero na ito. Ang mahalaga mas marami syang gems na nakain dapat malakas sya sa part na ito kung gusto nya maligtas ang mundo. At kung gusto ng wizard ibalik lahat ng mga nakain at nasira ng past. Sa loob ng 100 years gaya nga sinabi sa kwento may spaceships na kaya sinasabing the curse in spaceship down to earth kasi yung mga animal villain na mga shokoys magsisipagtalon ito pwede rin sila kumain ng mga tao at lumaki ng lumaki the more na mas kumakain sila mas mahirap matalo ito. Kaya payo ng wizard magpapaalam lang siya hanggat hindi natatapos kainin ang mga legend gems para maging malakas sina dog shokoy hindi sya babalik ulit at mababago ang mundo sa kapayaan."
+  ];
+
+  // Populate crawl DOM cleanly from STORY_PARAGRAPHS
+  const crawlStoryBody = document.getElementById("crawlStoryBody");
+  STORY_PARAGRAPHS.forEach((text) => {
+    const p = document.createElement("p");
+    p.textContent = text;
+    crawlStoryBody.appendChild(p);
+  });
+
+  // =========================================================================
+  // DOM & STATE REFERENCES
+  // =========================================================================
+  const canvas = document.getElementById("spaceCanvas");
+  const ctx = canvas.getContext("2d");
+  const emojiLayer = document.getElementById("emojiLayer");
+  const introPhraseEl = document.getElementById("introPhrase");
+  const gameLogoWrapEl = document.getElementById("gameLogoWrap");
+  const crawlViewportEl = document.getElementById("crawlViewport");
+  const crawlPlaneEl = document.getElementById("crawlPlane");
+  const startGateEl = document.getElementById("startGate");
+  const launchBtn = document.getElementById("launchBtn");
+  const replayBtn = document.getElementById("replayBtn");
+  const toggleMusicBtn = document.getElementById("toggleMusicBtn");
+  const toggleSfxBtn = document.getElementById("toggleSfxBtn");
+  const toggleVoiceBtn = document.getElementById("toggleVoiceBtn");
+  const statusBanner = document.getElementById("statusBanner");
+  const bgMusicEl = document.getElementById("bgMusic");
+
+  let musicEnabled = true;
+  let sfxEnabled = true;
+  let voiceEnabled = true;
+  let sequenceRunning = false;
+  let sequenceTimers = [];
+
+  // =========================================================================
+  // AUDIO SYSTEM: STAR WARS MP3 + SYNTH FALLBACK + EMOJI FIREWORKS SFX
+  // =========================================================================
+  let audioCtx = null;
+  let musicGain = null;
+  let sfxGain = null;
+  let themeLoopTimer = null;
+  let usingMp3Stream = false;
+
+  function ensureAudio() {
+    if (!audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContextClass();
+
+      musicGain = audioCtx.createGain();
+      musicGain.gain.value = musicEnabled ? 0.24 : 0;
+      musicGain.connect(audioCtx.destination);
+
+      sfxGain = audioCtx.createGain();
+      sfxGain.gain.value = sfxEnabled ? 0.45 : 0;
+      sfxGain.connect(audioCtx.destination);
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+  }
+
+  const STAR_WARS_MOTIF = [
+    [196.00, 0.5],
+    [293.66, 1.5],
+    [261.63, 0.25],
+    [246.94, 0.25],
+    [220.00, 0.25],
+    [392.00, 1.5],
+    [293.66, 0.75],
+    [261.63, 0.25],
+    [246.94, 0.25],
+    [220.00, 0.25],
+    [392.00, 1.5],
+    [293.66, 0.75],
+    [261.63, 0.25],
+    [246.94, 0.25],
+    [261.63, 0.25],
+    [220.00, 1.75]
+  ];
+
+  function playBrassNote(freq, startTime, durationSec) {
+    if (!audioCtx || !musicEnabled || usingMp3Stream) return;
+
+    const osc1 = audioCtx.createOscillator();
+    const osc2 = audioCtx.createOscillator();
+    const filter = audioCtx.createBiquadFilter();
+    const noteGain = audioCtx.createGain();
+
+    osc1.type = "sawtooth";
+    osc2.type = "triangle";
+    osc1.frequency.setValueAtTime(freq, startTime);
+    osc2.frequency.setValueAtTime(freq * 1.003, startTime);
+
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(420, startTime);
+    filter.frequency.exponentialRampToValueAtTime(1750, startTime + 0.08);
+    filter.frequency.exponentialRampToValueAtTime(680, startTime + durationSec);
+
+    noteGain.gain.setValueAtTime(0.0001, startTime);
+    noteGain.gain.linearRampToValueAtTime(0.32, startTime + 0.045);
+    noteGain.gain.setValueAtTime(0.24, startTime + Math.max(0.06, durationSec - 0.08));
+    noteGain.gain.exponentialRampToValueAtTime(0.0001, startTime + durationSec);
+
+    osc1.connect(filter);
+    osc2.connect(filter);
+    filter.connect(noteGain);
+    noteGain.connect(musicGain);
+
+    osc1.start(startTime);
+    osc2.start(startTime);
+    osc1.stop(startTime + durationSec + 0.03);
+    osc2.stop(startTime + durationSec + 0.03);
+  }
+
+  function playLowPulse(startTime, durationSec) {
+    if (!audioCtx || !musicEnabled || usingMp3Stream) return;
+    const sub = audioCtx.createOscillator();
+    const subGain = audioCtx.createGain();
+    sub.type = "sine";
+    sub.frequency.setValueAtTime(98.0, startTime);
+    subGain.gain.setValueAtTime(0.0001, startTime);
+    subGain.gain.linearRampToValueAtTime(0.25, startTime + 0.05);
+    subGain.gain.exponentialRampToValueAtTime(0.0001, startTime + durationSec);
+    sub.connect(subGain);
+    subGain.connect(musicGain);
+    sub.start(startTime);
+    sub.stop(startTime + durationSec + 0.03);
+  }
+
+  function scheduleThemeCycle() {
+    if (!musicEnabled || usingMp3Stream || !audioCtx) return;
+    const tempoSecPerBeat = 0.44;
+    let cursor = audioCtx.currentTime + 0.05;
+
+    STAR_WARS_MOTIF.forEach(([freq, beats]) => {
+      const dur = beats * tempoSecPerBeat;
+      playBrassNote(freq, cursor, dur * 0.94);
+      if (beats >= 1.25) {
+        playLowPulse(cursor, dur);
+      }
+      cursor += dur;
+    });
+
+    const totalCycleMs = (cursor - audioCtx.currentTime) * 1000;
+    clearTimeout(themeLoopTimer);
+    themeLoopTimer = setTimeout(() => {
+      if (musicEnabled && !usingMp3Stream && sequenceRunning) {
+        scheduleThemeCycle();
+      }
+    }, Math.max(200, totalCycleMs - 40));
+  }
+
+  function startStarWarsMusic() {
+    ensureAudio();
+    if (!musicEnabled) return;
+
+    scheduleThemeCycle();
+
+    bgMusicEl.volume = 0.85;
+    const playPromise = bgMusicEl.play();
+    if (playPromise && typeof playPromise.then === "function") {
+      playPromise
+        .then(() => {
+          usingMp3Stream = true;
+          clearTimeout(themeLoopTimer);
+        })
+        .catch(() => {
+          usingMp3Stream = false;
+          scheduleThemeCycle();
+        });
+    }
+  }
+
+  bgMusicEl.addEventListener("playing", () => {
+    if (musicEnabled) {
+      usingMp3Stream = true;
+      clearTimeout(themeLoopTimer);
+    }
+  });
+
+  bgMusicEl.addEventListener("error", () => {
+    usingMp3Stream = false;
+    if (musicEnabled && sequenceRunning) {
+      scheduleThemeCycle();
+    }
+  });
+
+  function stopStarWarsMusic() {
+    clearTimeout(themeLoopTimer);
+    usingMp3Stream = false;
+    if (!bgMusicEl.paused) {
+      bgMusicEl.pause();
+    }
+  }
+
+  function playEmojiFireworkSfx() {
+    if (!sfxEnabled || !audioCtx) return;
+    if (audioCtx.state === "suspended") audioCtx.resume();
+
+    const now = audioCtx.currentTime;
+
+    const whooshOsc = audioCtx.createOscillator();
+    const whooshGain = audioCtx.createGain();
+    whooshOsc.type = "sine";
+    const startF = 240 + Math.random() * 140;
+    whooshOsc.frequency.setValueAtTime(startF, now);
+    whooshOsc.frequency.exponentialRampToValueAtTime(startF * 2.6, now + 0.14);
+    whooshGain.gain.setValueAtTime(0.001, now);
+    whooshGain.gain.linearRampToValueAtTime(0.16, now + 0.04);
+    whooshGain.gain.exponentialRampToValueAtTime(0.0001, now + 0.15);
+    whooshOsc.connect(whooshGain);
+    whooshGain.connect(sfxGain);
+    whooshOsc.start(now);
+    whooshOsc.stop(now + 0.16);
+
+    const burstTime = now + 0.11;
+    const bufferSize = Math.floor(audioCtx.sampleRate * 0.42);
+    const noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+    const data = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) {
+      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / bufferSize, 1.7);
+    }
+
+    const noise = audioCtx.createBufferSource();
+    noise.buffer = noiseBuffer;
+
+    const bandpass = audioCtx.createBiquadFilter();
+    bandpass.type = "bandpass";
+    bandpass.frequency.setValueAtTime(950 + Math.random() * 900, burstTime);
+    bandpass.Q.setValueAtTime(1.4, burstTime);
+
+    const burstGain = audioCtx.createGain();
+    burstGain.gain.setValueAtTime(0.45, burstTime);
+    burstGain.gain.exponentialRampToValueAtTime(0.001, burstTime + 0.4);
+
+    noise.connect(bandpass);
+    bandpass.connect(burstGain);
+    burstGain.connect(sfxGain);
+    noise.start(burstTime);
+
+    const chime = audioCtx.createOscillator();
+    const chimeGain = audioCtx.createGain();
+    chime.type = "triangle";
+    const baseNote = 660 + Math.random() * 520;
+    chime.frequency.setValueAtTime(baseNote, burstTime);
+    chime.frequency.exponentialRampToValueAtTime(baseNote * 1.45, burstTime + 0.22);
+    chimeGain.gain.setValueAtTime(0.12, burstTime);
+    chimeGain.gain.exponentialRampToValueAtTime(0.0001, burstTime + 0.24);
+    chime.connect(chimeGain);
+    chimeGain.connect(sfxGain);
+    chime.start(burstTime);
+    chime.stop(burstTime + 0.25);
+  }
+
+  // =========================================================================
+  // HYPERSPEED STARFIELD (SMALL STARS ONLY — NO EMOJI POPPING ON STARS)
+  // =========================================================================
+  let width = 0;
+  let height = 0;
+  let dpr = 1;
+  let stars = [];
+  let hyperspeedFactor = 1.0;
+  let targetHyperspeed = 1.0;
+
+  function resizeCanvas() {
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    width = window.innerWidth;
+    height = window.innerHeight;
+    canvas.width = Math.floor(width * dpr);
+    canvas.height = Math.floor(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function initStars(count = 340) {
+    stars = [];
+    for (let i = 0; i < count; i++) {
+      stars.push({
+        x: (Math.random() - 0.5) * width * 1.8,
+        y: (Math.random() - 0.5) * height * 1.8,
+        z: Math.random() * 1400 + 80,
+        size: Math.random() * 1.6 + 0.5,
+        hue: Math.random() < 0.2 ? 185 : Math.random() < 0.25 ? 52 : 210
+      });
+    }
+  }
+
+  function renderStars() {
+    ctx.fillStyle = "rgba(2, 3, 12, 0.34)";
+    ctx.fillRect(0, 0, width, height);
+
+    hyperspeedFactor += (targetHyperspeed - hyperspeedFactor) * 0.06;
+
+    const cx = width * 0.5;
+    const cy = height * 0.5;
+    const baseSpeed = 4.2 * hyperspeedFactor;
+
+    for (let i = 0; i < stars.length; i++) {
+      const s = stars[i];
+      const prevZ = s.z;
+      s.z -= baseSpeed * (1 + (1500 - s.z) / 900);
+
+      if (s.z <= 8) {
+        s.x = (Math.random() - 0.5) * width * 1.8;
+        s.y = (Math.random() - 0.5) * height * 1.8;
+        s.z = 1480;
+        continue;
+      }
+
+      const k = 320 / s.z;
+      const sx = cx + s.x * k;
+      const sy = cy + s.y * k;
+
+      const pk = 320 / prevZ;
+      const px = cx + s.x * pk;
+      const py = cy + s.y * pk;
+
+      if (sx < -60 || sx > width + 60 || sy < -60 || sy > height + 60) continue;
+
+      const alpha = Math.min(1, (1500 - s.z) / 650);
+      const streakWidth = s.size * Math.min(2.6, 0.8 + hyperspeedFactor * 0.14);
+
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(sx, sy);
+      ctx.strokeStyle = `hsla(${s.hue}, 95%, 86%, ${alpha})`;
+      ctx.lineWidth = streakWidth;
+      ctx.stroke();
+    }
+
+    requestAnimationFrame(renderStars);
+  }
+
+  // =========================================================================
+  // FLYING EMOJIS + EMOJI FIREWORKS DISPLAY (ONLY EMOJIS POP INTO FIREWORKS)
+  // =========================================================================
+  const FLYING_EMOJIS = ["🚀", "🛸", "🐶", "🐟", "🧟", "🧙‍♂️", "💎", "🔥", "⚡", "🌌", "🪐", "☄️"];
+  const FIREWORK_EMOJI_BURSTS = ["🎆", "🎇", "✨", "💥", "🌟", "💫", "🔥", "⭐"];
+  let emojiSpawnTimer = null;
+
+  function triggerEmojiFirework(x, y, originEmoji) {
+    if (!sequenceRunning) return;
+
+    playEmojiFireworkSfx();
+
+    const particles = 14;
+    for (let i = 0; i < particles; i++) {
+      const spark = document.createElement("div");
+      spark.className = "emoji-spark";
+      spark.textContent = i === 0
+        ? originEmoji
+        : FIREWORK_EMOJI_BURSTS[(i + Math.floor(Math.random() * FIREWORK_EMOJI_BURSTS.length)) % FIREWORK_EMOJI_BURSTS.length];
+
+      spark.style.left = `${x}px`;
+      spark.style.top = `${y}px`;
+      emojiLayer.appendChild(spark);
+
+      const angle = (Math.PI * 2 * i) / particles + (Math.random() - 0.5) * 0.25;
+      const distance = 65 + Math.random() * 135;
+      const dx = Math.cos(angle) * distance;
+      const dy = Math.sin(angle) * distance + 28;
+      const rot = (Math.random() - 0.5) * 540;
+      const duration = 680 + Math.random() * 420;
+
+      const anim = spark.animate(
+        [
+          { transform: "translate(-50%, -50%) scale(0.7) rotate(0deg)", opacity: 1 },
+          { transform: `translate(calc(-50% + ${dx * 0.65}px), calc(-50% + ${dy * 0.55}px)) scale(1.25) rotate(${rot * 0.6}deg)`, opacity: 1, offset: 0.55 },
+          { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(0.25) rotate(${rot}deg)`, opacity: 0 }
+        ],
+        { duration, easing: "cubic-bezier(0.16, 0.88, 0.32, 1)", fill: "forwards" }
+      );
+
+      anim.onfinish = () => spark.remove();
+    }
+  }
+
+  function spawnFlyingEmoji() {
+    if (!sequenceRunning) return;
+
+    const emojiChar = FLYING_EMOJIS[Math.floor(Math.random() * FLYING_EMOJIS.length)];
+    const el = document.createElement("div");
+    el.className = "flying-emoji";
+    el.textContent = emojiChar;
+
+    const fromLeft = Math.random() < 0.5;
+    const startX = fromLeft ? -60 : width + 60;
+    const startY = height * (0.14 + Math.random() * 0.68);
+    const endX = fromLeft ? width + 80 : -80;
+    const endY = startY + (Math.random() - 0.5) * 240;
+    const flightMs = 2400 + Math.random() * 1700;
+    const popFraction = 0.38 + Math.random() * 0.36;
+
+    el.style.left = "0px";
+    el.style.top = "0px";
+    emojiLayer.appendChild(el);
+
+    const anim = el.animate(
+      [
+        { transform: `translate(${startX}px, ${startY}px) scale(0.8) rotate(0deg)`, opacity: 0.95 },
+        { transform: `translate(${endX}px, ${endY}px) scale(1.25) rotate(${fromLeft ? 360 : -360}deg)`, opacity: 0.95 }
+      ],
+      { duration: flightMs, easing: "linear", fill: "forwards" }
+    );
+
+    const popTimeout = setTimeout(() => {
+      if (!el.isConnected || !sequenceRunning) return;
+      const curX = startX + (endX - startX) * popFraction;
+      const curY = startY + (endY - startY) * popFraction;
+      el.remove();
+      triggerEmojiFirework(curX, curY, emojiChar);
+    }, flightMs * popFraction);
+
+    sequenceTimers.push(popTimeout);
+
+    anim.onfinish = () => {
+      clearTimeout(popTimeout);
+      if (el.isConnected) el.remove();
+    };
+  }
+
+  function startEmojiShow() {
+    clearInterval(emojiSpawnTimer);
+    for (let i = 0; i < 4; i++) {
+      setTimeout(spawnFlyingEmoji, i * 240);
+    }
+    emojiSpawnTimer = setInterval(spawnFlyingEmoji, 620);
+  }
+
+  // =========================================================================
+  // AI VOICE NARRATION (WEB SPEECH API READING THE SCROLL)
+  // =========================================================================
+  let voicesCache = [];
+
+  function loadVoices() {
+    if (!("speechSynthesis" in window)) return;
+    voicesCache = window.speechSynthesis.getVoices() || [];
+  }
+
+  if ("speechSynthesis" in window) {
+    loadVoices();
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+  }
+
+  function pickBestVoice() {
+    if (!voicesCache.length) return null;
+    const tlVoice = voicesCache.find((v) => /fil|tl|tagalog/i.test(v.lang) || /filipino|tagalog/i.test(v.name));
+    if (tlVoice) return tlVoice;
+    const enVoice = voicesCache.find((v) => /en/i.test(v.lang));
+    return enVoice || voicesCache[0];
+  }
+
+  function stopVoiceNarration() {
+    if ("speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+  }
+
+  function speakScrollNarration() {
+    stopVoiceNarration();
+    if (!voiceEnabled || !("speechSynthesis" in window) || !sequenceRunning) return;
+
+    const chosenVoice = pickBestVoice();
+    const lines = [STORY_TITLE, ...STORY_PARAGRAPHS];
+
+    lines.forEach((line, idx) => {
+      const utter = new SpeechSynthesisUtterance(line);
+      if (chosenVoice) {
+        utter.voice = chosenVoice;
+        utter.lang = chosenVoice.lang;
+      } else {
+        utter.lang = "fil-PH";
+      }
+      utter.rate = 1.02;
+      utter.pitch = idx === 0 ? 1.08 : 1.0;
+      utter.volume = 1.0;
+      window.speechSynthesis.speak(utter);
+    });
+  }
+
+  // =========================================================================
+  // STAR WARS SEQUENCE: INTRO -> TITLE -> HYPER DROP-OFF -> DIAGONAL CRAWL
+  // =========================================================================
+  let crawlRafId = null;
+  let crawlStartTime = null;
+  const CRAWL_DURATION_MS = 165000;
+
+  function clearAllSequenceTimers() {
+    sequenceTimers.forEach((id) => clearTimeout(id));
+    sequenceTimers = [];
+    if (crawlRafId) {
+      cancelAnimationFrame(crawlRafId);
+      crawlRafId = null;
+    }
+  }
+
+  function startCrawlAnimation() {
+    crawlViewportEl.classList.add("active");
+    crawlStartTime = performance.now();
+
+    const planeHeight = Math.max(crawlPlaneEl.scrollHeight, 3400);
+    const travelDistance = planeHeight + window.innerHeight * 1.25;
+
+    function stepCrawl(now) {
+      if (!sequenceRunning) return;
+      const elapsed = now - crawlStartTime;
+      const progress = Math.min(1, elapsed / CRAWL_DURATION_MS);
+      const currentY = -progress * travelDistance;
+      const currentZ = 140 - progress * 220;
+
+      crawlPlaneEl.style.transform = `translate3d(-50%, ${currentY}px, ${currentZ}px) rotateX(34deg) rotateZ(-4deg)`;
+
+      if (progress < 1) {
+        crawlRafId = requestAnimationFrame(stepCrawl);
+      } else {
+        statusBanner.textContent = "Scroll Complete • Click Replay to run again";
+      }
+    }
+
+    crawlRafId = requestAnimationFrame(stepCrawl);
+  }
+
+  function runStarWarsSequence() {
+    clearAllSequenceTimers();
+    stopVoiceNarration();
+    sequenceRunning = true;
+
+    introPhraseEl.classList.remove("visible");
+    gameLogoWrapEl.classList.remove("show", "hyper-dropoff");
+    crawlViewportEl.classList.remove("active");
+    crawlPlaneEl.style.transform = "translate3d(-50%, 0px, 140px) rotateX(34deg) rotateZ(-4deg)";
+
+    targetHyperspeed = 5.5;
+    startStarWarsMusic();
+    startEmojiShow();
+    statusBanner.textContent = "Star Wars Music Active • There lived a galaxy far, far away...";
+
+    const t1 = setTimeout(() => {
+      if (!sequenceRunning) return;
+      introPhraseEl.classList.add("visible");
+    }, 550);
+
+    const t2 = setTimeout(() => {
+      if (!sequenceRunning) return;
+      introPhraseEl.classList.remove("visible");
+      targetHyperspeed = 2.4;
+      statusBanner.textContent = `Title Incoming: ${STORY_TITLE}`;
+    }, 3600);
+
+    const t3 = setTimeout(() => {
+      if (!sequenceRunning) return;
+      gameLogoWrapEl.classList.add("show");
+    }, 4200);
+
+    const t4 = setTimeout(() => {
+      if (!sequenceRunning) return;
+      targetHyperspeed = 8.2;
+      gameLogoWrapEl.classList.add("hyper-dropoff");
+      statusBanner.textContent = "Hyper Drop-Off • Large Diagonal Scroll & AI Voice Active";
+    }, 7400);
+
+    const t5 = setTimeout(() => {
+      if (!sequenceRunning) return;
+      gameLogoWrapEl.classList.remove("show", "hyper-dropoff");
+      targetHyperspeed = 2.1;
+      startCrawlAnimation();
+      speakScrollNarration();
+    }, 8650);
+
+    sequenceTimers.push(t1, t2, t3, t4, t5);
+  }
+
+  // =========================================================================
+  // BUTTON CONTROLS & INITIALIZATION
+  // =========================================================================
+  launchBtn.addEventListener("click", () => {
+    startGateEl.classList.add("hidden");
+    ensureAudio();
+    runStarWarsSequence();
+  });
+
+  replayBtn.addEventListener("click", () => {
+    startGateEl.classList.add("hidden");
+    ensureAudio();
+    runStarWarsSequence();
+  });
+
+  toggleMusicBtn.addEventListener("click", () => {
+    ensureAudio();
+    musicEnabled = !musicEnabled;
+    toggleMusicBtn.classList.toggle("active", musicEnabled);
+    toggleMusicBtn.textContent = musicEnabled ? "🎵 MP3 Music: ON" : "🔇 MP3 Music: OFF";
+
+    if (musicGain) {
+      musicGain.gain.setTargetAtTime(musicEnabled ? 0.24 : 0, audioCtx.currentTime, 0.04);
+    }
+
+    if (musicEnabled) {
+      startStarWarsMusic();
+    } else {
+      stopStarWarsMusic();
+    }
+  });
+
+  toggleSfxBtn.addEventListener("click", () => {
+    ensureAudio();
+    sfxEnabled = !sfxEnabled;
+    toggleSfxBtn.classList.toggle("active", sfxEnabled);
+    toggleSfxBtn.textContent = sfxEnabled ? "🎆 Emoji SFX: ON" : "🔕 Emoji SFX: OFF";
+    if (sfxGain) {
+      sfxGain.gain.setTargetAtTime(sfxEnabled ? 0.45 : 0, audioCtx.currentTime, 0.04);
+    }
+  });
+
+  toggleVoiceBtn.addEventListener("click", () => {
+    voiceEnabled = !voiceEnabled;
+    toggleVoiceBtn.classList.toggle("active", voiceEnabled);
+    toggleVoiceBtn.textContent = voiceEnabled ? "🗣️ AI Voice: ON" : "🤫 AI Voice: OFF";
+
+    if (voiceEnabled && crawlViewportEl.classList.contains("active")) {
+      speakScrollNarration();
+    } else if (!voiceEnabled) {
+      stopVoiceNarration();
+    }
+  });
+
+  window.addEventListener("resize", () => {
+    resizeCanvas();
+  });
+
+  resizeCanvas();
+  initStars(360);
+  renderStars();
+})();
+</script>
+</body>
+</html>
